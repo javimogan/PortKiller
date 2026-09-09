@@ -21,16 +21,27 @@ and what it costs you — then kills it in one click.
 
 ## Install
 
+**Download** the `.dmg` from [Releases](https://github.com/javimogan/PortKiller/releases),
+open it, drag PortKiller onto Applications.
+
+The app is signed, but not *notarised* — that needs a paid Apple Developer account — so the
+first launch is refused with "Apple could not verify PortKiller". Open
+**System Settings ▸ Privacy & Security**, scroll down and click **Open Anyway**. Once only.
+If you'd rather skip the dialog:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/PortKiller.app
+```
+
+**Or build it yourself** — no warning at all, since the app never leaves your machine:
+
 ```bash
 git clone https://github.com/javimogan/PortKiller.git
 cd PortKiller && ./install.sh
 ```
 
-Builds it, drops it in `/Applications` and launches it. Enable **Launch at login**
-in the ⚙️ menu and forget it's there.
-
-Needs macOS 14+ and a Swift 6 toolchain (Xcode). To build without installing:
-`./build.sh` → `dist/PortKiller.app`.
+Either way, enable **Launch at login** in the ⚙️ menu and forget it's there.
+Building needs macOS 14+ and a Swift 6 toolchain (Xcode).
 
 ## What it shows
 
@@ -86,7 +97,12 @@ of `MenuView.swift`.
 
 ```bash
 .build/release/PortKiller --list    # prints what the menu would show
+./release.sh 1.1                    # drag-to-Applications DMG in dist/
 ```
+
+`release.sh` signs and notarises the DMG automatically if a **Developer ID Application**
+certificate is installed and `notarytool` credentials are stored — see the header of the
+script. Without them it still builds a working DMG, just one that warns on first launch.
 
 If a tool is mislabelled or missing, add a pattern to `rules` in
 [`Scanner.swift`](Sources/PortKiller/Scanner.swift) — ordered by specificity, first match wins.

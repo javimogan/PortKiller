@@ -232,6 +232,7 @@ enum Scanner {
 
     /// Build the list shown in the menu: dev trees first, then anything else holding a port.
     static func scan() -> [ProcGroup] {
+        if Demo.isEnabled { return Demo.groups }
         let rows = processes()
         let ports = listeningPorts()
         let byPid = Dictionary(uniqueKeysWithValues: rows.map { ($0.pid, $0) })
@@ -325,6 +326,8 @@ enum Scanner {
 
     /// SIGTERM the whole tree (deepest first), then SIGKILL whatever is still alive.
     static func kill(pids: [Int32]) {
+        // Demo pids are made up, and a made-up pid can belong to a real process.
+        guard !Demo.isEnabled else { return }
         let ordered = Array(pids.reversed())
         for pid in ordered { Darwin.kill(pid, SIGTERM) }
         DispatchQueue.global().asyncAfter(deadline: .now() + 2.5) {

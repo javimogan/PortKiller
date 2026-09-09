@@ -13,6 +13,7 @@ enum SystemStats {
     private nonisolated(unsafe) static var previousTicks: (busy: Double, total: Double)?
 
     static func sample() -> SystemUsage {
+        if Demo.isEnabled { return Demo.system }
         let used = ramUsedMB()
         let total = Double(ProcessInfo.processInfo.physicalMemory) / 1024 / 1024
         return SystemUsage(cpuPercent: cpuPercent(),

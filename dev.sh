@@ -6,6 +6,8 @@ set -uo pipefail
 cd "$(dirname "$0")"
 
 BIN=".build/debug/PortKiller"
+DEMO=""
+[[ "${1:-}" == "--demo" ]] && DEMO="1"
 APP_PID=""
 
 bold=$'\033[1m'; dim=$'\033[2m'; green=$'\033[32m'; red=$'\033[31m'; reset=$'\033[0m'
@@ -30,12 +32,13 @@ rebuild_and_run() {
     return 1
   fi
   stop_app
-  PORTKILLER_DEV=1 "$BIN" &
+  PORTKILLER_DEV=1 PORTKILLER_DEMO="$DEMO" "$BIN" &
   APP_PID=$!
   printf '\r%s\n' "${green}✓${reset} reloaded in $((SECONDS - start))s ${dim}(pid $APP_PID)${reset}        "
 }
 
 echo "${bold}PortKiller dev${reset} ${dim}— save a file and it reloads. Ctrl+C to quit.${reset}"
+[[ -n "$DEMO" ]] && echo "${dim}demo mode: fake processes, killing is disabled${reset}"
 rebuild_and_run
 last=$(fingerprint)
 

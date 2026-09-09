@@ -1,85 +1,99 @@
+<div align="center">
+
+<img src="assets/icon.png" width="120" alt="PortKiller">
+
 # PortKiller
 
-Menu bar app for macOS that lists the dev servers and processes running on your machine
-and kills them in one click, so nothing keeps burning battery after you stop working.
+**Kill the dev servers you forgot about.**
 
-![menu bar icon: ⚡ in a circle]
+A macOS menu bar app that lists what's still running, which port it holds
+and what it costs you — then kills it in one click.
+
+<img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14+-1c1c1e?style=flat-square">
+<img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-f05138?style=flat-square&logo=swift&logoColor=white">
+<img alt="Menu bar app" src="https://img.shields.io/badge/menu%20bar-native-fc5b52?style=flat-square">
+
+<!--
+  SCREENSHOT GOES HERE. To take it:
+    1. ./dev.sh --demo        opens the app with fake processes; killing is disabled
+    2. ⌘⇧4 then Space, click the floating window   (macOS captures it with its shadow)
+    3. save it as assets/screenshot.png
+    4. uncomment the line below
+-->
+<!-- <img src="assets/screenshot.png" width="430" alt="The PortKiller menu"> -->
+
+</div>
+
+---
+
+## Install
+
+```bash
+git clone https://github.com/javimogan/PortKiller.git
+cd PortKiller && ./install.sh
+```
+
+Builds it, drops it in `/Applications` and launches it. Enable **Launch at login**
+in the ⚙️ menu and forget it's there.
+
+Needs macOS 14+ and a Swift 6 toolchain (Xcode). To build without installing:
+`./build.sh` → `dist/PortKiller.app`.
 
 ## What it shows
 
-Each row is one **process tree**, not one process: `pnpm dev` and the `next-server` it spawned
-collapse into a single "Next.js" entry, and killing it takes the children with it.
+Each row is a **process tree**, not a process: `pnpm dev` and the `next-server` it spawned
+are one "Next.js" entry, and killing it takes the children with it.
 
-- Framework name (Next.js, Vite, Astro, Storybook, Postgres, Docker…) — detected from the command line
-- Icon: the real macOS app icon when the process lives in a `.app` (Spotify, VS Code, Docker…),
-  resolved from the executable path via `proc_pidpath`. Dev tools have no icon the system knows
-  about, so they get an SF Symbol in their brand colour instead (`brandTints` in `MenuView.swift`)
-- Project folder — the process's working directory
-- Listening ports — click one to open `http://localhost:PORT`
-- CPU % and RAM, summed across the whole tree
-- `+N` = how many child processes go down with it
+- **Name** — Next.js, Vite, Astro, Storybook, Postgres, Docker… read off the command line
+- **Project** — the process's working directory
+- **Ports** — click one to open `http://localhost:PORT`
+- **CPU and memory** — summed across the tree; the header shows the whole machine
+- **`+N`** — how many child processes go down with it
 
-**Show all** adds everything else holding a port (Spotify, Control Center, VS Code…).
-Protected entries — VS Code, Claude, MCP servers, PortKiller itself — are marked 🔒 and are
-never included in **Kill all**, though you can still kill them one by one.
+Apps that live in a `.app` show their real macOS icon; dev tools, which the system has no
+icon for, get their brand colour instead.
 
-Only processes owned by your user are listed; root daemons can't be killed anyway.
+Only processes owned by your user are listed — root daemons can't be killed anyway. Your
+editor, Claude and MCP servers are marked 🔒 and left out of **Kill all**, though you can
+still kill them one at a time.
 
 ## Interacting
 
 | Action | What it does |
 |---|---|
-| Click a row | Selects it (click again to deselect). Click more rows to select several |
-| The red button | `Kill all` with nothing selected, `Kill Next.js · 1.0 GB` once something is. Hover it for the CPU freed too |
+| Click a row | Selects it. Click again to deselect, click more rows for several |
+| The red button | `Kill all` with nothing selected, `Kill Next.js · 1.0 GB` once something is |
 | Chevron on the left | Expands the full command line |
-| `×` on the right | Kills that one entry without selecting it |
+| `×` on the right | Kills that entry without selecting it |
 | Port badge | Opens `http://localhost:PORT` |
 
-## Install
+## How it works
+
+**Finding things** — `lsof` for listening ports, `ps` for the process tree, then every
+interesting process is rolled up to its topmost interesting ancestor so a dev server and its
+wrapper collapse into one row. Shells are never anchors: they repeat the whole command line
+in their own arguments and would swallow the tree.
+
+**Killing** — `SIGTERM` to the whole tree, deepest child first. Anything still alive 2.5s
+later gets `SIGKILL`.
+
+**Battery** — the list refreshes every 3s **only while the panel is open**. Closed, the app
+does nothing; a background poller would be exactly the drain it exists to remove.
+
+## Development
 
 ```bash
-./install.sh      # builds, copies to /Applications, launches
+./dev.sh           # rebuild on save (~1s) and relaunch, with a floating window
+./dev.sh --demo    # same, with fake processes — for screenshots
 ```
 
-Then enable **Launch at login** in the ⚙️ menu.
-
-To build without installing: `./build.sh` → `dist/PortKiller.app`.
-
-## Live development
+The window keeps its position across reloads, so you watch changes land without reopening
+the menu. For layout only, open `Package.swift` in Xcode and use the `#Preview` at the end
+of `MenuView.swift`.
 
 ```bash
-./dev.sh
+.build/release/PortKiller --list    # prints what the menu would show
 ```
 
-Watches `Sources/` and `Package.swift`, rebuilds on save (~1s incremental) and relaunches.
-In dev mode the app also opens a **floating window** with the same UI, so you see changes
-without opening the menu every time; the window keeps its position across reloads. The menu bar
-item still works as usual. `Ctrl+C` to quit.
-
-For layout work alone: open `Package.swift` in Xcode and use the `#Preview` at the end of
-`MenuView.swift` — the canvas updates without rebuilding the whole app.
-
-When you like the change, `./install.sh` replaces the copy in `/Applications`.
-
-## How killing works
-
-`SIGTERM` to the whole tree, deepest child first. Anything still alive 2.5s later gets `SIGKILL`.
-
-## Battery
-
-The process list refreshes every 3s **only while the popover is open**. Closed, the app does
-nothing — a background poller would be exactly the drain this app exists to remove.
-
-## Debugging detection
-
-```bash
-.build/release/PortKiller --list
-```
-
-Prints what the menu would show. If a tool is mislabelled or missing, add a pattern to
-`rules` in [Sources/PortKiller/Scanner.swift](Sources/PortKiller/Scanner.swift) — the list is
-ordered by specificity, first match wins.
-
-## Requirements
-
-macOS 14+, Swift 6 toolchain (Xcode).
+If a tool is mislabelled or missing, add a pattern to `rules` in
+[`Scanner.swift`](Sources/PortKiller/Scanner.swift) — ordered by specificity, first match wins.

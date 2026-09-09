@@ -13,14 +13,7 @@ and what it costs you — then kills it in one click.
 <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-f05138?style=flat-square&logo=swift&logoColor=white">
 <img alt="Menu bar app" src="https://img.shields.io/badge/menu%20bar-native-fc5b52?style=flat-square">
 
-<!--
-  SCREENSHOT GOES HERE. To take it:
-    1. ./dev.sh --demo        opens the app with fake processes; killing is disabled
-    2. ⌘⇧4 then Space, click the floating window   (macOS captures it with its shadow)
-    3. save it as assets/screenshot.png
-    4. uncomment the line below
--->
-<!-- <img src="assets/screenshot.png" width="430" alt="The PortKiller menu"> -->
+<img src="assets/screenshot.png" width="430" alt="The PortKiller menu">
 
 </div>
 

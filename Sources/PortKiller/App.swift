@@ -24,6 +24,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         // Keeps the window where you left it across the rebuild-relaunch cycle.
         window.setFrameAutosaveName("PortKillerDevWindow")
+        // Screenshots want a canonical size and a title without the dev suffix; the everyday
+        // dev window keeps whatever size you last dragged it to.
+        if Demo.isEnabled {
+            window.title = "PortKiller"
+            window.setContentSize(NSSize(width: 420, height: 620))
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         devWindow = window

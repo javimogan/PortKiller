@@ -22,18 +22,10 @@ and what it costs you — then kills it in one click.
 ## Install
 
 **Download** the `.dmg` from [Releases](https://github.com/javimogan/PortKiller/releases),
-open it, drag PortKiller onto Applications.
+open it, drag PortKiller onto Applications. That's it — the app is signed with a Developer ID
+and notarised by Apple, so it opens with no warnings and no Gatekeeper detour.
 
-The app is signed, but not *notarised* — that needs a paid Apple Developer account — so the
-first launch is refused with "Apple could not verify PortKiller". Open
-**System Settings ▸ Privacy & Security**, scroll down and click **Open Anyway**. Once only.
-If you'd rather skip the dialog:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/PortKiller.app
-```
-
-**Or build it yourself** — no warning at all, since the app never leaves your machine:
+**Or build it yourself:**
 
 ```bash
 git clone https://github.com/javimogan/PortKiller.git
@@ -100,9 +92,10 @@ of `MenuView.swift`.
 ./release.sh 1.1                    # drag-to-Applications DMG in dist/
 ```
 
-`release.sh` signs and notarises the DMG automatically if a **Developer ID Application**
-certificate is installed and `notarytool` credentials are stored — see the header of the
-script. Without them it still builds a working DMG, just one that warns on first launch.
+`release.sh` signs with the **Developer ID Application** certificate, notarises the app,
+staples the ticket, then repeats it for the disk image. It needs `notarytool` credentials in
+the keychain under the profile `portkiller` — see the header of the script. Without a
+Developer ID it still builds a working DMG, just one that warns on first launch.
 
 If a tool is mislabelled or missing, add a pattern to `rules` in
 [`Scanner.swift`](Sources/PortKiller/Scanner.swift) — ordered by specificity, first match wins.

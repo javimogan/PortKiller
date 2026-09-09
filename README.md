@@ -12,6 +12,7 @@ and what it costs you — then kills it in one click.
 <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14+-1c1c1e?style=flat-square">
 <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-f05138?style=flat-square&logo=swift&logoColor=white">
 <img alt="Menu bar app" src="https://img.shields.io/badge/menu%20bar-native-fc5b52?style=flat-square">
+<img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-6f7681?style=flat-square">
 
 <img src="assets/screenshot.png" width="430" alt="The PortKiller menu">
 

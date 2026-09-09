@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION="${1:-1.0}"
+VERSION="${1:-1.1}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-portkiller}"
 DMG="dist/PortKiller-$VERSION.dmg"
 STAGE="dist/dmg"

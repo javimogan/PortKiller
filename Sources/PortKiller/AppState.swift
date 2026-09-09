@@ -91,6 +91,48 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Uninstall
+
+    /// Removes the login item, forgets the stored preferences and puts the bundle in the Trash,
+    /// which is recoverable — deleting outright would leave the user no way back.
+    func uninstall() {
+        let bundle = Bundle.main.bundleURL
+        guard bundle.pathExtension == "app" else {
+            // A bare `swift build` binary has no bundle to move; nothing to uninstall.
+            NSSound.beep()
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "Move PortKiller to the Trash?"
+        alert.informativeText = """
+            PortKiller quits, stops opening at login, and its app goes to the Trash. \
+            Nothing else on your Mac is touched, and you can put it back from the Trash.
+            """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Move to Trash")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        try? SMAppService.mainApp.unregister()
+        if let identifier = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: identifier)
+        }
+
+        NSWorkspace.shared.recycle([bundle]) { _, error in
+            DispatchQueue.main.async {
+                if let error {
+                    let failure = NSAlert(error: error)
+                    failure.messageText = "Couldn't move PortKiller to the Trash"
+                    failure.runModal()
+                    return
+                }
+                NSApp.terminate(nil)
+            }
+        }
+    }
+
     // MARK: - Login item
 
     var launchAtLogin: Bool {

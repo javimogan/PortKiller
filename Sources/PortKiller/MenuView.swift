@@ -137,6 +137,8 @@ struct MenuView: View {
                 ))
                 Divider()
                 Button("Quit PortKiller") { NSApplication.shared.terminate(nil) }
+                Divider()
+                Button("Uninstall PortKiller…") { state.uninstall() }
             } label: {
                 Image(systemName: "gearshape")
             }

@@ -36,6 +36,10 @@ cd PortKiller && ./install.sh
 Either way, enable **Launch at login** in the ⚙️ menu and forget it's there.
 Building needs macOS 14+ and a Swift 6 toolchain (Xcode).
 
+To **uninstall**, use ⚙️ ▸ *Uninstall PortKiller*: it quits, removes the login item, forgets
+its preferences and puts the app in the Trash. Nothing is left behind and nothing is deleted
+outright, so you can still change your mind from the Trash.
+
 ## What it shows
 
 Each row is a **process tree**, not a process: `pnpm dev` and the `next-server` it spawned

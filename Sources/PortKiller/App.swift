@@ -8,7 +8,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var devWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard isDevMode else { return }
+        guard isDevMode else {
+            // Let the menu bar item appear first, so the alert can point at an icon that is
+            // already on screen.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                AppState.shared.offerLaunchAtLoginOnFirstRun()
+            }
+            return
+        }
 
         NSApp.setActivationPolicy(.regular)
         let window = NSWindow(

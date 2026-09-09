@@ -91,6 +91,35 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - First run
+
+    /// Asked once, on the first launch of an installed copy. It doubles as the only chance to
+    /// tell a new user where the app actually went: a menu bar app with no Dock icon and no
+    /// window is easy to install and never find.
+    func offerLaunchAtLoginOnFirstRun() {
+        let key = "didAskLaunchAtLogin"
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: key),
+              Bundle.main.bundleURL.pathExtension == "app",
+              SMAppService.mainApp.status != .enabled else { return }
+        defaults.set(true, forKey: key)
+
+        let alert = NSAlert()
+        alert.messageText = "Open PortKiller at login?"
+        alert.informativeText = """
+            PortKiller lives in the menu bar — look for the ⚡ icon at the top right of the \
+            screen. Opening it at login keeps it there whenever you're working.
+
+            You can change this any time in the ⚙️ menu.
+            """
+        alert.addButton(withTitle: "Open at Login")
+        alert.addButton(withTitle: "Not Now")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            launchAtLogin = true
+        }
+    }
+
     // MARK: - Uninstall
 
     /// Removes the login item, forgets the stored preferences and puts the bundle in the Trash,

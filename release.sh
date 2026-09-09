@@ -26,11 +26,25 @@ VERSION="$VERSION" ./build.sh
 IDENTITY="${DEVELOPER_ID:-$(security find-identity -v -p codesigning \
   | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.+)"/\1/' || true)}"
 
+notarised=""
+
 if [[ -n "$IDENTITY" ]]; then
   echo "${dim}signing as${reset} $IDENTITY"
   # Hardened runtime and a secure timestamp are both required for notarisation.
-  codesign --force --deep --options runtime --timestamp \
-           --sign "$IDENTITY" dist/PortKiller.app
+  # No --deep: Apple advises against it, and this bundle has no nested code anyway.
+  codesign --force --options runtime --timestamp --sign "$IDENTITY" dist/PortKiller.app
+
+  # Notarise the app itself first and staple the ticket into the bundle. Stapling only the
+  # DMG would leave the copy in /Applications relying on a network check at first launch.
+  echo "${dim}notarising the app… (a few minutes)${reset}"
+  ditto -c -k --keepParent dist/PortKiller.app dist/PortKiller.zip
+  if xcrun notarytool submit dist/PortKiller.zip --keychain-profile "$NOTARY_PROFILE" --wait; then
+    xcrun stapler staple dist/PortKiller.app
+    notarised="1"
+  else
+    echo "${yellow}notarisation failed — see: xcrun notarytool log <id> --keychain-profile $NOTARY_PROFILE${reset}"
+  fi
+  rm -f dist/PortKiller.zip
 else
   echo "${yellow}no Developer ID found — the DMG will be ad-hoc signed${reset}"
 fi
@@ -44,19 +58,19 @@ hdiutil create -quiet -volname "PortKiller" -srcfolder "$STAGE" \
                -ov -format UDZO "$DMG"
 rm -rf "$STAGE"
 
-if [[ -n "$IDENTITY" ]]; then
+if [[ -n "$notarised" ]]; then
+  # The DMG is a separate artefact and needs its own signature and ticket.
   codesign --force --sign "$IDENTITY" "$DMG"
-  echo "${dim}notarising… (a few minutes)${reset}"
+  echo "${dim}notarising the disk image…${reset}"
   if xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait; then
-    # Stapling puts the ticket inside the DMG so it opens even offline.
     xcrun stapler staple "$DMG"
-    echo "${green}✓${reset} ${bold}$DMG${reset} signed, notarised and stapled"
+    echo "${green}✓${reset} ${bold}$DMG${reset} $(du -h "$DMG" | cut -f1) — signed, notarised, stapled"
+    spctl -a -vvv -t install "$DMG" 2>&1 | sed 's/^/  /'
     exit 0
   fi
-  echo "${yellow}notarisation failed — the DMG is signed but will still warn on first launch${reset}"
 fi
 
 echo "${green}✓${reset} ${bold}$DMG${reset} $(du -h "$DMG" | cut -f1)"
-echo "${dim}unnotarised: users get \"Apple could not verify\" and must allow it in"
+echo "${dim}not notarised: users get \"Apple could not verify\" and must allow it in"
 echo "System Settings > Privacy & Security, or run:"
 echo "  xattr -dr com.apple.quarantine /Applications/PortKiller.app${reset}"
